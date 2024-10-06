@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de Administración - Sthenos</title>
+    <link rel="icon" href="logo.png" type="image/png">
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa; /* Fondo claro */
+            font-family: 'Arial', sans-serif;
+        }
+        .banner {
+            background-color: #000; /* Fondo negro */
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        #logo {
+            max-width: 150px;
+        }
+        .welcome-text {
+            color: white; /* Color del texto */
+            margin-left: 20px; /* Espaciado a la izquierda */
+            font-size: 24px; /* Tamaño de fuente */
+        }
+        .admin-link {
+            color: white; /* Color del enlace */
+            text-decoration: none; /* Sin subrayado */
+            font-size: 18px; /* Tamaño de fuente */
+            margin-left: auto; /* Alinear a la derecha */
+        }
+        .admin-link:hover {
+            text-decoration: underline; /* Subrayar al pasar el mouse */
+        }
+        .producto-imagen {
+            max-width: 100px; /* Tamaño de la imagen del producto */
+            margin-right: 10px;
+            border-radius: 5px; /* Bordes redondeados */
+        }
+        .btn-primary, .btn-secondary {
+            margin-top: 10px; /* Espacio superior */
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            margin-top: 30px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <nav class="banner">
+        <img id="logo" src="logo.png" alt="Logo de Sthenos">
+        <span class="welcome-text">Panel de Administración</span>
+        <div class="navbar-nav">
+            <a class="nav-link admin-link" href="index.html" title="Volver a la Tienda">🏠 Volver a la Tienda</a>
+            <button class="btn btn-danger" id="logoutButton">Cerrar Sesión</button>
+        </div>
+    </nav>
+    
+    <div class="container my-4">
+        <h1 class="my-4">Gestión de Productos</h1>
+
+        <form id="formAgregarProducto" class="mb-4">
+            <div class="form-group">
+                <label for="nombre">Nombre del Producto</label>
+                <input type="text" class="form-control" id="nombre" required>
+            </div>
+            <div class="form-group">
+                <label for="precio">Precio</label>
+                <input type="number" class="form-control" id="precio" required>
+            </div>
+            <div class="form-group">
+                <label for="imagen">Imagen del Producto</label>
+                <input type="file" class="form-control" id="imagen" accept="image/*" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Agregar Producto</button>
+        </form>
+
+        <h2 class="my-4">Lista de Productos</h2>
+        <div id="listaProductos"></div>
+        
+        <footer class="footer">
+            <p>&copy; 2024 Sthenos. Todos los derechos reservados.</p>
+        </footer>
+    </div>
+
+    <script>
+        const form = document.getElementById('formAgregarProducto');
+        const listaProductosDiv = document.getElementById('listaProductos');
+
+        mostrarProductos();
+
+        form.addEventListener('submit', (event) => {
+            event.preventDefault();
+            const nombre = document.getElementById('nombre').value;
+            const precio = document.getElementById('precio').value;
+            const imagenInput = document.getElementById('imagen');
+            const imagenFile = imagenInput.files[0];
+
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                let productos = JSON.parse(localStorage.getItem('productos')) || [];
+                productos.push({ nombre, precio: parseFloat(precio), imagen: reader.result });
+                localStorage.setItem('productos', JSON.stringify(productos));
+
+                alert('Producto agregado exitosamente.');
+                form.reset();
+                mostrarProductos();
+            };
+
+            if (imagenFile) {
+                reader.readAsDataURL(imagenFile);
+            }
+        });
+
+        function mostrarProductos() {
+            listaProductosDiv.innerHTML = '';
+            let productos = JSON.parse(localStorage.getItem('productos')) || [];
+
+            productos.forEach((producto, index) => {
+                const div = document.createElement('div');
+                div.className = 'd-flex align-items-center my-2';
+                div.innerHTML = `
+                    <img class="producto-imagen" src="${producto.imagen}" alt="${producto.nombre}">
+                    <span>${producto.nombre} - $${producto.precio.toFixed(2)}</span>
+                    <button class="btn btn-warning btn-sm ml-auto" onclick="editarProducto(${index})">Editar</button>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarProducto(${index})">Eliminar</button>
+                `;
+                listaProductosDiv.appendChild(div);
+            });
+        }
+
+        function editarProducto(index) {
+            let productos = JSON.parse(localStorage.getItem('productos')) || [];
+            const producto = productos[index];
+
+            document.getElementById('nombre').value = producto.nombre;
+            document.getElementById('precio').value = producto.precio;
+            productos.splice(index, 1); // Eliminar el producto actual
+            localStorage.setItem('productos', JSON.stringify(productos));
+            mostrarProductos();
+        }
+
+        function eliminarProducto(index) {
+            let productos = JSON.parse(localStorage.getItem('productos')) || [];
+            productos.splice(index, 1);
+            localStorage.setItem('productos', JSON.stringify(productos));
+            mostrarProductos();
+        }
+
+        document.getElementById('logoutButton').addEventListener('click', () => {
+            localStorage.removeItem('usuarioActivo');
+            window.location.href = 'login.html';
+        });
+
+        window.onload = mostrarProductos;
+    </script>
+</body>
+</html>
